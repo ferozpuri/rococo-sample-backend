@@ -13,16 +13,18 @@ from common.utils.version import get_service_version, get_project_name
 from logger import set_request_exception_signal, logger
 
 
-
 # Initialize Flask-Restx
 api = Api(
     version=get_service_version(),
     title=get_project_name(),
     description="Welcome to the API documentation of Rococo Sample API",
-    authorizations={'Bearer': {'type': 'apiKey', 'in': 'header', 'name': 'Authorization'}},
-    security='Bearer',
-    doc='/api-doc'
+    authorizations={
+        "Bearer": {"type": "apiKey", "in": "header", "name": "Authorization"}
+    },
+    security="Bearer",
+    doc="/api-doc",
 )
+
 
 def create_app():
     config = get_config()
@@ -35,6 +37,7 @@ def create_app():
 
     # Register views
     from app.views import initialize_views
+
     initialize_views(api)
 
     api.init_app(app)
@@ -44,27 +47,29 @@ def create_app():
 
     PooledConnectionPlugin(app, database_type="postgres")
 
-    @app.route('/')
+    @app.route("/")
     def hello_world():
-        return 'Welcome to Rococo Sample API.'
+        return "Welcome to Rococo Sample API."
 
     @app.errorhandler(ModelValidationError)
     def handle_model_validation_error(exception):
         # Handle your custom exception here
         from app.helpers.response import get_failure_response
-        return get_failure_response(message='\n'.join(exception.errors))
+
+        return get_failure_response(message="\n".join(exception.errors))
 
     @app.errorhandler(InputValidationError)
     def handle_input_validation_error(exception):
         # Handle your custom exception here
         from app.helpers.response import get_failure_response
-        return get_failure_response(message=str(exception))
 
+        return get_failure_response(message=str(exception))
 
     @app.errorhandler(APIException)
     def handle_application_error(exception):
         # Handle your custom exception here
         from app.helpers.response import get_failure_response
+
         return get_failure_response(message=str(exception))
 
     return app
