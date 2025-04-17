@@ -47,7 +47,9 @@ def get_connection_resolver():
 def get_connection_closer():
     pooled_db = get_flask_pooled_db()
     if pooled_db:
-        return lambda *args, **kwargs: None  # No-op; let Pooled DB handle closing of connection on request teardown.
+        return (
+            lambda *args, **kwargs: None
+        )  # No-op; let Pooled DB handle closing of connection on request teardown.
 
 
 class RepoType(Enum):
@@ -56,12 +58,13 @@ class RepoType(Enum):
     def _generate_next_value_(name, start, count, last_values):
         """Method for auto-generating Enum values"""
         return name.lower()
-    
+
     PERSON = auto()
     ORGANIZATION = auto()
     EMAIL = auto()
     LOGIN_METHOD = auto()
     PERSON_ORGANIZATION_ROLE = auto()
+    TASK = auto()
 
 
 class RepositoryFactory:
@@ -74,7 +77,8 @@ class RepositoryFactory:
         RepoType.ORGANIZATION: OrganizationRepository,
         RepoType.EMAIL: EmailRepository,
         RepoType.LOGIN_METHOD: LoginMethodRepository,
-        RepoType.PERSON_ORGANIZATION_ROLE: PersonOrganizationRoleRepository
+        RepoType.PERSON_ORGANIZATION_ROLE: PersonOrganizationRoleRepository,
+        RepoType.TASK: TaskRepository,
     }
 
     def get_db_connection(self):
@@ -84,7 +88,15 @@ class RepositoryFactory:
         password = self.config.POSTGRES_PASSWORD
         database = self.config.POSTGRES_DB
 
-        return PostgreSQLAdapter(host, port, user, password, database, connection_resolver=get_connection_resolver(), connection_closer=get_connection_closer())
+        return PostgreSQLAdapter(
+            host,
+            port,
+            user,
+            password,
+            database,
+            connection_resolver=get_connection_resolver(),
+            connection_closer=get_connection_closer(),
+        )
 
     def _get_rabbitmq_connection(self):
         return RabbitMqConnection(
@@ -92,19 +104,22 @@ class RepositoryFactory:
             port=int(self.config.RABBITMQ_PORT),
             username=self.config.RABBITMQ_USER,
             password=self.config.RABBITMQ_PASSWORD,
-            virtual_host=self.config.RABBITMQ_VIRTUAL_HOST
+            virtual_host=self.config.RABBITMQ_VIRTUAL_HOST,
         )
 
     def get_adapter(self):
         return self._get_rabbitmq_connection()
 
-    def get_repository(self, repo_type: RepoType, person_id=None, message_queue_name: str = ""):
+    def get_repository(
+        self, repo_type: RepoType, person_id=None, message_queue_name: str = ""
+    ):
         adapter = self.get_db_connection()
         message_adapter = self.get_adapter()
         repo_class = self._repositories.get(repo_type)
 
         if repo_class:
             import threading
+
             return repo_class(adapter, message_adapter, message_queue_name, person_id)
 
         raise ValueError(f"No repository found with the name '{repo_type}'")
