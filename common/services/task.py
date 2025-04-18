@@ -1,5 +1,7 @@
 from common.repositories.factory import RepositoryFactory, RepoType
 from common.models.task import Task
+import uuid
+from datetime import datetime
 
 
 class TaskService:
@@ -8,9 +10,17 @@ class TaskService:
         self.repository_factory = RepositoryFactory(config)
         self.task_repo = self.repository_factory.get_repository(RepoType.TASK)
 
-    def create_task(
-        self, title: str, description: str = None, person_id: str = None
-    ) -> Task:
+    def create_task(self, title: str, person_id: str, description: str = None) -> Task:
+        """Create a new task.
+
+        Args:
+            title (str): The title of the task.
+            person_id (str): The ID of the person assigned to the task.
+            description (str, optional): The description of the task. Defaults to None.
+
+        Returns:
+            Task: The created task.
+        """
         task_data = {
             "title": title,
             "description": description,
@@ -25,11 +35,23 @@ class TaskService:
     def get_task_by_id(self, task_id: str) -> Task:
         return self.task_repo.get_by_id(task_id)
 
-    def get_tasks_by_person(self, person_id: str, is_completed: bool = None) -> list:
+    def get_tasks_by_person(
+        self,
+        person_id: str,
+        is_completed: bool = None,
+        offset: int = 0,
+        limit: int = None,
+    ) -> list:
         query = {"person_id": person_id}
         if is_completed is not None:
             query["is_completed"] = is_completed
-        return self.task_repo.get_all(query)
+        return self.task_repo.get_all(query, offset=offset, limit=limit)
+
+    def count_tasks_by_person(self, person_id: str, is_completed: bool = None) -> int:
+        query = {"person_id": person_id}
+        if is_completed is not None:
+            query["is_completed"] = is_completed
+        return self.task_repo.count(query)
 
     def update_task(
         self,
