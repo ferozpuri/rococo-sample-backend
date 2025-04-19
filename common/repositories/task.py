@@ -16,8 +16,7 @@ class TaskRepository(BaseRepository):
         if query is None:
             query = {}
 
-        # Add ORDER BY clause to sort by created_at in descending order
-        # order_by = "ORDER BY created_at DESC"
+        # order_by = "ORDER BY created_at DESC" [NOT WORKING]
         # return self.get_many(query, offset=offset, limit=limit)
 
         # Build the WHERE clause from the query dict
