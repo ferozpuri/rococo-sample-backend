@@ -12,7 +12,7 @@ def parse_request_body(request, keys, default_value=None):
 
 def validate_required_fields(required_fields):
     for field, value in required_fields.items():
-        if not value or not str(value).strip():
+        if value is None or (not isinstance(value, bool) and not str(value).strip()):
             raise InputValidationError(f"'{field}' is required and cannot be empty.")
 
 
@@ -20,7 +20,7 @@ def _get_response(data, status_code=200):
     response = app.response_class(
         response=app.json.dumps(data),
         status=status_code,
-        mimetype=app.config['MIME_TYPE']
+        mimetype=app.config["MIME_TYPE"],
     )
     return response
 
