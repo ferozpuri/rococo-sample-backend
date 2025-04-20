@@ -121,7 +121,13 @@ class Task(Resource):
         parsed_body = parse_request_body(
             request, ["title", "description", "is_completed"]
         )
-        validate_required_fields(parsed_body)
+        # Only validate required fields (title and description)
+        validate_required_fields(
+            {
+                "title": parsed_body.get("title"),
+                "description": parsed_body.get("description"),
+            }
+        )
 
         task_service = TaskService(config)
         task = task_service.get_task_by_id(task_id)
@@ -136,7 +142,9 @@ class Task(Resource):
             task_id=task_id,
             title=parsed_body.get("title"),
             description=parsed_body.get("description"),
-            is_completed=parsed_body.get("is_completed"),
+            is_completed=parsed_body.get(
+                "is_completed"
+            ),  # This will be None if not provided
         )
 
         if not updated_task:

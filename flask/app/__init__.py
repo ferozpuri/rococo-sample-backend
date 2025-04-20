@@ -1,4 +1,4 @@
-from flask import Flask, g, Request
+from flask import Flask, g, Request, request
 from flask_restx import Api
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
@@ -45,6 +45,19 @@ def create_app():
 
     # Add simple CORS support
     CORS(app)
+
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            response = app.make_default_options_response()
+            response.headers["Access-Control-Allow-Methods"] = (
+                "GET, POST, PUT, DELETE, OPTIONS"
+            )
+            response.headers["Access-Control-Allow-Headers"] = (
+                "Content-Type, Authorization"
+            )
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            return response
 
     PooledConnectionPlugin(app, database_type="postgres")
 
